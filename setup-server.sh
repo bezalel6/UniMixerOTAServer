@@ -54,7 +54,11 @@ mkdir -p ${INSTALL_DIR}/config
 
 # Copy application files
 echo "📋 Copying application files..."
-cp -r . ${INSTALL_DIR}/
+if [ "$(pwd)" != "${INSTALL_DIR}" ]; then
+    cp -r . ${INSTALL_DIR}/
+else
+    echo "Already in target directory, skipping copy..."
+fi
 chown -R ${SERVICE_USER}:${SERVICE_USER} ${INSTALL_DIR}
 chmod +x ${INSTALL_DIR}/docker-deploy.sh
 
