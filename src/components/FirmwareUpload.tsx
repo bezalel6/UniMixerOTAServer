@@ -1,6 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import {
+    Box,
+    Paper,
+    Typography,
+    Button,
+    LinearProgress,
+    Alert,
+    Chip,
+    Card,
+    CardContent,
+    CardHeader
+} from "@mui/material";
+import {
+    CloudUpload,
+    CheckCircle,
+    Error as ErrorIcon,
+    UploadFile
+} from "@mui/icons-material";
 
 interface FirmwareUploadProps {
     onUploadSuccess: () => void;
@@ -10,9 +28,10 @@ export default function FirmwareUpload({ onUploadSuccess }: FirmwareUploadProps)
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [isDragOver, setIsDragOver] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    const handleFileUpload = async (file: File) => {
         if (!file) return;
 
         // Validate file type (should be .bin for ESP32 firmware)
@@ -44,7 +63,9 @@ export default function FirmwareUpload({ onUploadSuccess }: FirmwareUploadProps)
                     setMessage({ type: 'success', text: 'Firmware uploaded successfully!' });
                     onUploadSuccess();
                     // Reset file input
-                    event.target.value = '';
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                    }
                 } else {
                     setMessage({ type: 'error', text: 'Upload failed. Please try again.' });
                 }
@@ -68,54 +89,174 @@ export default function FirmwareUpload({ onUploadSuccess }: FirmwareUploadProps)
         }
     };
 
+    const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            handleFileUpload(file);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileUpload(files[0]);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
+    };
+
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Firmware</h3>
+        <Card elevation={2}>
+            <CardHeader
+                avatar={
+                    <Paper elevation={3} sx={{ p: 1, backgroundColor: 'primary.main', color: 'white' }}>
+                        <CloudUpload />
+                    </Paper>
+                }
+                title={
+                    <Typography variant="h6" fontWeight="bold">
+                        Upload Firmware
+                    </Typography>
+                }
+                subheader="Deploy new firmware to ESP32 devices"
+            />
+            <CardContent>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {/* Drag and Drop Area */}
+                    <Paper
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onClick={triggerFileInput}
+                        elevation={0}
+                        sx={{
+                            border: 2,
+                            borderStyle: 'dashed',
+                            borderColor: isDragOver ? 'primary.main' : 'grey.300',
+                            backgroundColor: isDragOver ? 'primary.50' : uploading ? 'grey.50' : 'transparent',
+                            p: 4,
+                            textAlign: 'center',
+                            cursor: uploading ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.3s ease',
+                            '&:hover': !uploading ? {
+                                borderColor: 'primary.main',
+                                backgroundColor: 'primary.50'
+                            } : {}
+                        }}
+                    >
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".bin"
+                            onChange={handleFileInputChange}
+                            disabled={uploading}
+                            style={{ display: 'none' }}
+                        />
 
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Firmware File (.bin)
-                    </label>
-                    <input
-                        type="file"
-                        accept=".bin"
-                        onChange={handleFileUpload}
-                        disabled={uploading}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
-                    />
-                </div>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            {uploading ? (
+                                <>
+                                    <Paper
+                                        elevation={1}
+                                        sx={{
+                                            p: 1.5,
+                                            borderRadius: '50%',
+                                            backgroundColor: 'primary.50'
+                                        }}
+                                    >
+                                        <UploadFile color="primary" />
+                                    </Paper>
+                                    <Box sx={{ textAlign: 'center' }}>
+                                        <Typography variant="body1" fontWeight="bold" color="primary">
+                                            Uploading...
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {uploadProgress}% complete
+                                        </Typography>
+                                    </Box>
+                                </>
+                            ) : (
+                                <>
+                                    <Paper
+                                        elevation={1}
+                                        sx={{
+                                            p: 1.5,
+                                            borderRadius: '50%',
+                                            backgroundColor: isDragOver ? 'primary.100' : 'grey.100'
+                                        }}
+                                    >
+                                        <CloudUpload color={isDragOver ? 'primary' : 'action'} />
+                                    </Paper>
+                                    <Box sx={{ textAlign: 'center' }}>
+                                        <Typography variant="body1" fontWeight="bold">
+                                            {isDragOver ? 'Drop file here' : 'Upload Firmware'}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Click or drag & drop .bin file
+                                        </Typography>
+                                    </Box>
+                                </>
+                            )}
+                        </Box>
+                    </Paper>
 
-                {uploading && (
-                    <div>
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                            <span>Uploading...</span>
-                            <span>{uploadProgress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${uploadProgress}%` }}
-                            ></div>
-                        </div>
-                    </div>
-                )}
+                    {/* Upload Progress */}
+                    {uploading && (
+                        <Paper elevation={1} sx={{ p: 2, backgroundColor: 'primary.50' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                <Typography variant="body2" fontWeight="bold" color="primary.dark">
+                                    Uploading...
+                                </Typography>
+                                <Typography variant="body2" fontWeight="bold" color="primary.main">
+                                    {uploadProgress}%
+                                </Typography>
+                            </Box>
+                            <LinearProgress
+                                variant="determinate"
+                                value={uploadProgress}
+                                sx={{ height: 8, borderRadius: 4 }}
+                            />
+                        </Paper>
+                    )}
 
-                {message && (
-                    <div className={`p-3 rounded-md ${message.type === 'success'
-                            ? 'bg-green-50 text-green-800 border border-green-200'
-                            : 'bg-red-50 text-red-800 border border-red-200'
-                        }`}>
-                        {message.text}
-                    </div>
-                )}
+                    {/* Status Messages */}
+                    {message && (
+                        <Alert
+                            severity={message.type === 'success' ? 'success' : 'error'}
+                            icon={message.type === 'success' ? <CheckCircle /> : <ErrorIcon />}
+                        >
+                            {message.text}
+                        </Alert>
+                    )}
 
-                <div className="text-sm text-gray-500">
-                    <p><strong>Supported formats:</strong> .bin files only</p>
-                    <p><strong>Max file size:</strong> 50MB</p>
-                    <p><strong>Note:</strong> Uploaded firmware will be available at <code>/api/firmware/latest.bin</code></p>
-                </div>
-            </div>
-        </div>
+                    {/* Upload Guidelines */}
+                    <Paper elevation={1} sx={{ p: 2, backgroundColor: 'grey.50' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Chip label=".bin files only" size="small" color="primary" variant="outlined" />
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Chip label="Max size: 50MB" size="small" color="success" variant="outlined" />
+                            </Box>
+                        </Box>
+                    </Paper>
+                </Box>
+            </CardContent>
+        </Card>
     );
 } 

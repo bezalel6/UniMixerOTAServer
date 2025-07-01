@@ -7,10 +7,10 @@ const FIRMWARE_DIR = path.join(process.cwd(), 'public', 'firmware');
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = params.filename;
+    const { filename } = await params;
     
     // Validate filename
     if (!filename || !filename.endsWith('.bin')) {
@@ -62,10 +62,10 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = params.filename;
+    const { filename } = await params;
 
     // Don't allow deletion of latest.bin
     if (filename === 'latest.bin') {

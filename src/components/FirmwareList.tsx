@@ -1,6 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+    Box,
+    Card,
+    CardContent,
+    CardHeader,
+    Typography,
+    Button,
+    Chip,
+    Paper,
+    CircularProgress,
+    Alert,
+    IconButton,
+    Divider
+} from "@mui/material";
+import {
+    Folder,
+    Refresh,
+    Download,
+    Delete,
+    ErrorOutline,
+    Schedule,
+    Storage,
+    Label,
+    Info
+} from "@mui/icons-material";
 
 interface FirmwareFile {
     name: string;
@@ -64,7 +89,7 @@ export default function FirmwareList({ refreshKey }: FirmwareListProps) {
     };
 
     const handleDelete = async (filename: string) => {
-        if (!confirm(`Are you sure you want to delete ${filename}?`)) {
+        if (!confirm(`Are you sure you want to delete ${filename}?\n\nThis action cannot be undone.`)) {
             return;
         }
 
@@ -86,107 +111,243 @@ export default function FirmwareList({ refreshKey }: FirmwareListProps) {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Firmware Files</h3>
-                <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <span className="ml-2 text-gray-600">Loading...</span>
-                </div>
-            </div>
+            <Card elevation={2}>
+                <CardHeader
+                    avatar={
+                        <Paper elevation={3} sx={{ p: 1, backgroundColor: 'success.main', color: 'white' }}>
+                            <Folder />
+                        </Paper>
+                    }
+                    title={
+                        <Typography variant="h6" fontWeight="bold">
+                            Firmware Library
+                        </Typography>
+                    }
+                    subheader="Manage versions"
+                />
+                <CardContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
+                        <CircularProgress color="primary" sx={{ mb: 2 }} />
+                        <Typography variant="body2" color="text.secondary">
+                            Loading...
+                        </Typography>
+                    </Box>
+                </CardContent>
+            </Card>
         );
     }
 
     if (error) {
         return (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Firmware Files</h3>
-                <div className="text-center py-8">
-                    <div className="text-red-600 mb-2">⚠️ {error}</div>
-                    <button
-                        onClick={fetchFirmwareList}
-                        className="text-blue-600 hover:text-blue-800 text-sm underline"
-                    >
-                        Try again
-                    </button>
-                </div>
-            </div>
+            <Card elevation={2}>
+                <CardHeader
+                    avatar={
+                        <Paper elevation={3} sx={{ p: 1, backgroundColor: 'success.main', color: 'white' }}>
+                            <Folder />
+                        </Paper>
+                    }
+                    title={
+                        <Typography variant="h6" fontWeight="bold">
+                            Firmware Library
+                        </Typography>
+                    }
+                    subheader="Manage versions"
+                />
+                <CardContent>
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                        <Paper
+                            elevation={1}
+                            sx={{
+                                p: 2,
+                                borderRadius: '50%',
+                                backgroundColor: 'error.50',
+                                display: 'inline-flex',
+                                mb: 2
+                            }}
+                        >
+                            <ErrorOutline color="error" fontSize="large" />
+                        </Paper>
+                        <Typography variant="h6" color="error" fontWeight="bold" gutterBottom>
+                            ⚠️ {error}
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            onClick={fetchFirmwareList}
+                            size="small"
+                        >
+                            Try Again
+                        </Button>
+                    </Box>
+                </CardContent>
+            </Card>
         );
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Firmware Files</h3>
-                <button
-                    onClick={fetchFirmwareList}
-                    className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                    Refresh
-                </button>
-            </div>
-
-            {firmwareFiles.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                    <div className="text-4xl mb-2">📁</div>
-                    <p>No firmware files uploaded yet</p>
-                    <p className="text-sm">Upload a .bin file to get started</p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {firmwareFiles.map((file, index) => (
-                        <div
-                            key={index}
-                            className={`border rounded-lg p-4 ${file.isLatest ? 'border-green-200 bg-green-50' : 'border-gray-200'
-                                }`}
+        <Card elevation={2}>
+            <CardHeader
+                avatar={
+                    <Paper elevation={3} sx={{ p: 1, backgroundColor: 'success.main', color: 'white' }}>
+                        <Folder />
+                    </Paper>
+                }
+                title={
+                    <Typography variant="h6" fontWeight="bold">
+                        Firmware Library
+                    </Typography>
+                }
+                subheader={`${firmwareFiles.length} versions available`}
+                action={
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Refresh />}
+                        onClick={fetchFirmwareList}
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
+            <CardContent>
+                {firmwareFiles.length === 0 ? (
+                    <Box sx={{ textAlign: 'center', py: 6 }}>
+                        <Paper
+                            elevation={1}
+                            sx={{
+                                p: 2,
+                                borderRadius: '50%',
+                                backgroundColor: 'grey.100',
+                                display: 'inline-flex',
+                                mb: 2
+                            }}
                         >
-                            <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <h4 className="font-medium text-gray-900">{file.name}</h4>
-                                        {file.isLatest && (
-                                            <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
-                                                Latest
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="text-sm text-gray-500 mt-1">
-                                        <span>{formatFileSize(file.size)}</span>
-                                        <span className="mx-2">•</span>
-                                        <span>{formatDate(file.uploadDate)}</span>
-                                        {file.version && (
-                                            <>
-                                                <span className="mx-2">•</span>
-                                                <span>v{file.version}</span>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleDownload(file.name)}
-                                        className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded hover:bg-blue-50"
-                                    >
-                                        Download
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(file.name)}
-                                        className="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded hover:bg-red-50"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                            <Folder color="action" fontSize="large" />
+                        </Paper>
+                        <Typography variant="h6" fontWeight="bold" gutterBottom>
+                            No firmware files yet
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Upload your first .bin file to get started
+                        </Typography>
+                        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                            <Download color="primary" fontSize="small" />
+                            <Typography variant="body2" color="primary">
+                                Use the upload section to add firmware
+                            </Typography>
+                        </Box>
+                    </Box>
+                ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {firmwareFiles.map((file, index) => (
+                            <Paper
+                                key={index}
+                                elevation={1}
+                                sx={{
+                                    p: 2,
+                                    border: file.isLatest ? '2px solid' : '1px solid',
+                                    borderColor: file.isLatest ? 'success.main' : 'divider',
+                                    backgroundColor: file.isLatest ? 'success.50' : 'background.paper',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': {
+                                        elevation: 3,
+                                        borderColor: file.isLatest ? 'success.dark' : 'primary.main'
+                                    }
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                            <Paper
+                                                elevation={0}
+                                                sx={{
+                                                    p: 0.5,
+                                                    borderRadius: 1,
+                                                    backgroundColor: file.isLatest ? 'success.100' : 'grey.100'
+                                                }}
+                                            >
+                                                <Folder
+                                                    fontSize="small"
+                                                    color={file.isLatest ? 'success' : 'action'}
+                                                />
+                                            </Paper>
+                                            <Typography variant="h6" fontWeight="bold">
+                                                {file.name}
+                                            </Typography>
+                                            {file.isLatest && (
+                                                <Chip
+                                                    label="LATEST"
+                                                    color="success"
+                                                    size="small"
+                                                    variant="filled"
+                                                />
+                                            )}
+                                        </Box>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                <Storage fontSize="small" color="action" />
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {formatFileSize(file.size)}
+                                                </Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                <Schedule fontSize="small" color="action" />
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {formatDate(file.uploadDate)}
+                                                </Typography>
+                                            </Box>
+                                            {file.version && (
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                    <Label fontSize="small" color="action" />
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        v{file.version}
+                                                    </Typography>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            startIcon={<Download />}
+                                            onClick={() => handleDownload(file.name)}
+                                        >
+                                            Download
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            color="error"
+                                            startIcon={<Delete />}
+                                            onClick={() => handleDelete(file.name)}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            </Paper>
+                        ))}
+                    </Box>
+                )}
 
-            <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-xs text-gray-500">
-                    <strong>ESP32 URL:</strong> The latest firmware is always available at{' '}
-                    <code className="bg-gray-100 px-1 rounded">/api/firmware/latest.bin</code>
-                </p>
-            </div>
-        </div>
+                <Divider sx={{ my: 3 }} />
+
+                <Alert severity="info" icon={<Info />}>
+                    <Typography variant="body2" fontWeight="bold" gutterBottom>
+                        ESP32 OTA Endpoint
+                    </Typography>
+                    <Typography variant="body2">
+                        Latest firmware: <code style={{
+                            backgroundColor: '#e3f2fd',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontFamily: 'monospace'
+                        }}>
+                            /api/firmware/latest.bin
+                        </code>
+                    </Typography>
+                </Alert>
+            </CardContent>
+        </Card>
     );
 } 

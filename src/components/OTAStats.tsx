@@ -1,6 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+    Box,
+    Card,
+    CardContent,
+    CardHeader,
+    Typography,
+    Button,
+    Paper,
+    Grid,
+    Chip,
+    Skeleton
+} from "@mui/material";
+import {
+    Analytics,
+    Refresh,
+    Folder,
+    Download,
+    Schedule,
+    Memory,
+    Storage,
+    Circle
+} from "@mui/icons-material";
 
 interface Stats {
     totalFirmwareFiles: number;
@@ -40,89 +62,230 @@ export default function OTAStats() {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Server Statistics</h3>
-                <div className="animate-pulse space-y-3">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                </div>
-            </div>
+            <Card elevation={2}>
+                <CardHeader
+                    avatar={
+                        <Paper elevation={3} sx={{ p: 1, backgroundColor: 'secondary.main', color: 'white' }}>
+                            <Analytics />
+                        </Paper>
+                    }
+                    title={
+                        <Typography variant="h6" fontWeight="bold">
+                            Server Analytics
+                        </Typography>
+                    }
+                    subheader="Real-time metrics"
+                />
+                <CardContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Skeleton variant="rectangular" height={80} sx={{ flex: 1, borderRadius: 2 }} />
+                            <Skeleton variant="rectangular" height={80} sx={{ flex: 1, borderRadius: 2 }} />
+                        </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <Skeleton variant="text" width="75%" />
+                            <Skeleton variant="text" width="50%" />
+                            <Skeleton variant="text" width="85%" />
+                        </Box>
+                    </Box>
+                </CardContent>
+            </Card>
         );
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Server Statistics</h3>
-
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-blue-50 rounded-lg p-3">
-                        <div className="text-2xl font-bold text-blue-600">
-                            {stats?.totalFirmwareFiles || 0}
-                        </div>
-                        <div className="text-sm text-blue-800">Firmware Files</div>
-                    </div>
-
-                    <div className="bg-green-50 rounded-lg p-3">
-                        <div className="text-2xl font-bold text-green-600">
-                            {stats?.totalDownloads || 0}
-                        </div>
-                        <div className="text-sm text-green-800">Total Downloads</div>
-                    </div>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Last Update:</span>
-                        <span className="font-medium">
-                            {stats?.lastUpdate
-                                ? new Date(stats.lastUpdate).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })
-                                : 'Never'
-                            }
-                        </span>
-                    </div>
-
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Server Uptime:</span>
-                        <span className="font-medium">{stats?.serverUptime || 'Unknown'}</span>
-                    </div>
-
-                    {stats?.diskSpace && (
-                        <>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Storage Used:</span>
-                                <span className="font-medium">{stats.diskSpace.used}</span>
-                            </div>
-
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Available:</span>
-                                <span className="font-medium">{stats.diskSpace.available}</span>
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                <div className="pt-4 border-t border-gray-200">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm text-gray-600">Server Online</span>
-                        </div>
-                        <button
-                            onClick={fetchStats}
-                            className="text-xs text-blue-600 hover:text-blue-800"
+        <Card elevation={2}>
+            <CardHeader
+                avatar={
+                    <Paper elevation={3} sx={{ p: 1, backgroundColor: 'secondary.main', color: 'white' }}>
+                        <Analytics />
+                    </Paper>
+                }
+                title={
+                    <Typography variant="h6" fontWeight="bold">
+                        Server Analytics
+                    </Typography>
+                }
+                subheader="Real-time metrics"
+                action={
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Refresh />}
+                        onClick={fetchStats}
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
+            <CardContent>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {/* Key Metrics Cards */}
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Paper
+                            elevation={1}
+                            sx={{
+                                flex: 1,
+                                p: 2,
+                                background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+                                border: '1px solid rgba(25, 118, 210, 0.2)'
+                            }}
                         >
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Paper
+                                    elevation={2}
+                                    sx={{
+                                        p: 1,
+                                        backgroundColor: 'primary.100',
+                                        borderRadius: 1
+                                    }}
+                                >
+                                    <Folder color="primary" fontSize="small" />
+                                </Paper>
+                                <Box>
+                                    <Typography variant="h5" fontWeight="bold" color="primary">
+                                        {stats?.totalFirmwareFiles || 0}
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight="medium" color="primary.dark">
+                                        Files
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Paper>
+
+                        <Paper
+                            elevation={1}
+                            sx={{
+                                flex: 1,
+                                p: 2,
+                                background: 'linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)',
+                                border: '1px solid rgba(46, 125, 50, 0.2)'
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Paper
+                                    elevation={2}
+                                    sx={{
+                                        p: 1,
+                                        backgroundColor: 'success.100',
+                                        borderRadius: 1
+                                    }}
+                                >
+                                    <Download color="success" fontSize="small" />
+                                </Paper>
+                                <Box>
+                                    <Typography variant="h5" fontWeight="bold" color="success.main">
+                                        {stats?.totalDownloads || 0}
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight="medium" color="success.dark">
+                                        Downloads
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Paper>
+                    </Box>
+
+                    {/* Detailed Statistics */}
+                    <Paper elevation={1} sx={{ p: 2, backgroundColor: 'grey.50' }}>
+                        <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Analytics fontSize="small" color="action" />
+                            Details
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Schedule fontSize="small" color="action" />
+                                    <Typography variant="body2" color="text.secondary">
+                                        Last Update
+                                    </Typography>
+                                </Box>
+                                <Typography variant="body2" fontWeight="medium">
+                                    {stats?.lastUpdate
+                                        ? new Date(stats.lastUpdate).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })
+                                        : 'Never'
+                                    }
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Memory fontSize="small" color="action" />
+                                    <Typography variant="body2" color="text.secondary">
+                                        Uptime
+                                    </Typography>
+                                </Box>
+                                <Typography variant="body2" fontWeight="medium">
+                                    {stats?.serverUptime || 'Unknown'}
+                                </Typography>
+                            </Box>
+
+                            {stats?.diskSpace && (
+                                <>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Storage fontSize="small" color="action" />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Used
+                                            </Typography>
+                                        </Box>
+                                        <Typography variant="body2" fontWeight="medium">
+                                            {stats.diskSpace.used}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Storage fontSize="small" color="action" />
+                                            <Typography variant="body2" color="text.secondary">
+                                                Available
+                                            </Typography>
+                                        </Box>
+                                        <Typography variant="body2" fontWeight="medium">
+                                            {stats.diskSpace.available}
+                                        </Typography>
+                                    </Box>
+                                </>
+                            )}
+                        </Box>
+                    </Paper>
+
+                    {/* Server Status */}
+                    <Paper
+                        elevation={1}
+                        sx={{
+                            p: 2,
+                            background: 'linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)',
+                            border: '1px solid rgba(46, 125, 50, 0.2)'
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Circle
+                                    sx={{
+                                        fontSize: 12,
+                                        color: 'success.main',
+                                        animation: 'pulse 2s infinite'
+                                    }}
+                                />
+                                <Typography variant="body2" fontWeight="bold" color="success.dark">
+                                    Server Online
+                                </Typography>
+                            </Box>
+                            <Chip
+                                label="Auto-refresh: 30s"
+                                size="small"
+                                color="success"
+                                variant="outlined"
+                            />
+                        </Box>
+                    </Paper>
+                </Box>
+            </CardContent>
+        </Card>
     );
 } 
