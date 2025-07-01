@@ -1,9 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile, unlink } from 'fs/promises';
+import { readFile, unlink, writeFile, readFile as readFileAsync } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 
 const FIRMWARE_DIR = path.join(process.cwd(), 'public', 'firmware');
+const STATS_FILE = path.join(process.cwd(), 'data', 'download-stats.json');
+
+interface DownloadStats {
+  totalDownloads: number;
+  lastDownload: string | null;
+  downloadHistory: Array<{
+    filename: string;
+    timestamp: string;
+    userAgent: string;
+    size: number;
+  }>;
+}
+
+async function updateDownloadStats(filename: string, userAgent: string, size: number) {
+  try {
+    // Ensure data directory exists
+    const dataDir = path.dirname(STATS_FILE);
+    if (!existsSync(dataDir)) {
+      await writeFile(path.join(dataDir, '.gitkeep'), '');
+    }
+
+    let stats: DownloadStats = {
+      totalDownloads: 0,
+      lastDownload: null,
+      downloadHistory: []
+    };
+
+    // Read existing stats if file exists
+    if (existsSync(STATS_FILE)) {
+      try {
+        const data = await readFileAsync(STATS_FILE, 'utf-8');
+        stats = JSON.parse(data);
+      } catch (e) {
+        console.warn('Failed to read download stats, starting fresh');
+      }
+    }
+
+    // Update stats
+    const now = new Date().toISOString();
+    stats.totalDownloads += 1;
+    stats.lastDownload = now;
+    stats.downloadHistory.push({
+      filename,
+      timestamp: now,
+      userAgent,
+      size
+    });
+
+    // Keep only last 100 downloads to prevent file from growing too large
+    if (stats.downloadHistory.length > 100) {
+      stats.downloadHistory = stats.downloadHistory.slice(-100);
+    }
+
+    // Save updated stats
+    await writeFile(STATS_FILE, JSON.stringify(stats, null, 2));
+  } catch (error) {
+    console.error('Failed to update download stats:', error);
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -40,11 +99,12 @@ export async function GET(
     headers.set('Pragma', 'no-cache');
     headers.set('Expires', '0');
 
-    // Log download for ESP32 requests
+    // Log and track download
     const userAgent = request.headers.get('user-agent') || '';
-    if (userAgent.includes('ESP32') || filename === 'latest.bin') {
-      console.log(`OTA Download: ${filename} (${fileBuffer.length} bytes) - User-Agent: ${userAgent}`);
-    }
+    console.log(`OTA Download: ${filename} (${fileBuffer.length} bytes) - User-Agent: ${userAgent}`);
+    
+    // Update download statistics
+    await updateDownloadStats(filename, userAgent, fileBuffer.length);
 
     return new NextResponse(fileBuffer, {
       status: 200,

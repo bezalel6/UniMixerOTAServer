@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readdir, stat } from 'fs/promises';
+import { readdir, stat, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
@@ -7,18 +7,81 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 const FIRMWARE_DIR = path.join(process.cwd(), 'public', 'firmware');
+const STATS_FILE = path.join(process.cwd(), 'data', 'download-stats.json');
 
 // Track server start time for uptime calculation
 const serverStartTime = Date.now();
+
+interface DownloadStats {
+  totalDownloads: number;
+  lastDownload: string | null;
+  downloadHistory: Array<{
+    filename: string;
+    timestamp: string;
+    userAgent: string;
+    size: number;
+  }>;
+}
 
 interface Stats {
   totalFirmwareFiles: number;
   totalDownloads: number;
   lastUpdate: string | null;
+  lastDownload: string | null;
   serverUptime: string;
   diskSpace: {
     used: string;
     available: string;
+  };
+  serverConfig: {
+    host: string;
+    port: string;
+    maxUploadSize: string;
+    isAutoDetect: boolean;
+    otaUrl: string;
+  };
+}
+
+async function getDownloadStats(): Promise<{ totalDownloads: number; lastDownload: string | null }> {
+  try {
+    if (!existsSync(STATS_FILE)) {
+      return { totalDownloads: 0, lastDownload: null };
+    }
+
+    const data = await readFile(STATS_FILE, 'utf-8');
+    const stats: DownloadStats = JSON.parse(data);
+    
+    return {
+      totalDownloads: stats.totalDownloads || 0,
+      lastDownload: stats.lastDownload || null
+    };
+  } catch (error) {
+    console.error('Error reading download stats:', error);
+    return { totalDownloads: 0, lastDownload: null };
+  }
+}
+
+function getServerConfig() {
+  // Read actual runtime environment variables
+  const host = process.env.NEXT_PUBLIC_SERVER_HOST || process.env.OTA_SERVER_HOST || 'localhost';
+  const port = process.env.NEXT_PUBLIC_SERVER_PORT || process.env.OTA_SERVER_PORT || process.env.PORT || '3000';
+  const maxUploadSize = process.env.MAX_UPLOAD_SIZE || '52428800';
+  const isAutoDetect = host === 'auto';
+  
+  // Generate OTA URL based on runtime config
+  let otaUrl;
+  if (isAutoDetect) {
+    otaUrl = 'http://[auto-detected-host]:' + port + '/api/firmware/latest.bin';
+  } else {
+    otaUrl = `http://${host}:${port}/api/firmware/latest.bin`;
+  }
+
+  return {
+    host,
+    port,
+    maxUploadSize,
+    isAutoDetect,
+    otaUrl
   };
 }
 
@@ -91,14 +154,18 @@ export async function GET() {
     }
 
     const diskSpace = await getDiskUsage();
+    const downloadStats = await getDownloadStats();
     const uptime = formatUptime(Date.now() - serverStartTime);
+    const serverConfig = getServerConfig();
 
     const stats: Stats = {
       totalFirmwareFiles: firmwareFiles.length,
-      totalDownloads: 0, // This would need to be tracked in a database or log file
+      totalDownloads: downloadStats.totalDownloads,
       lastUpdate: lastUpdate,
+      lastDownload: downloadStats.lastDownload,
       serverUptime: uptime,
-      diskSpace: diskSpace
+      diskSpace: diskSpace,
+      serverConfig: serverConfig
     };
 
     return NextResponse.json(stats);

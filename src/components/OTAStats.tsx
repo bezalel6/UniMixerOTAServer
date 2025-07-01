@@ -28,6 +28,7 @@ interface Stats {
     totalFirmwareFiles: number;
     totalDownloads: number;
     lastUpdate: string | null;
+    lastDownload: string | null;
     serverUptime: string;
     diskSpace: {
         used: string;
@@ -202,6 +203,26 @@ export default function OTAStats() {
                                 <Typography variant="body2" fontWeight="medium">
                                     {stats?.lastUpdate
                                         ? new Date(stats.lastUpdate).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })
+                                        : 'Never'
+                                    }
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Download fontSize="small" color="action" />
+                                    <Typography variant="body2" color="text.secondary">
+                                        Last Download
+                                    </Typography>
+                                </Box>
+                                <Typography variant="body2" fontWeight="medium">
+                                    {stats?.lastDownload
+                                        ? new Date(stats.lastDownload).toLocaleDateString('en-US', {
                                             month: 'short',
                                             day: 'numeric',
                                             hour: '2-digit',

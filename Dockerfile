@@ -42,6 +42,11 @@ RUN adduser --system --uid 1001 nextjs
 # Create firmware directory with proper permissions
 RUN mkdir -p /app/public/firmware && chown -R nextjs:nodejs /app/public/firmware
 
+# Create directories for persistent data
+RUN mkdir -p /app/data && \
+    touch /app/data/.gitkeep && \
+    chown -R nextjs:nodejs /app/data
+
 # Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

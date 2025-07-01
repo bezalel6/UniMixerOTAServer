@@ -146,3 +146,5 @@ public/firmware/*.elf
 
 # System files
 .fuse_hidden* 
+
+server

@@ -10,30 +10,60 @@ import {
     Button,
     Paper,
     Chip,
-    Alert
+    Alert,
+    CircularProgress
 } from "@mui/material";
 import {
     Settings,
     ContentCopy,
     CheckCircle,
-    NetworkCheck
+    NetworkCheck,
+    Refresh
 } from "@mui/icons-material";
-import { getServerConfig, getFirmwareUrl } from "@/lib/config";
+
+interface ServerConfig {
+    host: string;
+    port: string;
+    maxUploadSize: string;
+    isAutoDetect: boolean;
+    otaUrl: string;
+}
 
 export default function ServerConfig() {
     const [currentUrl, setCurrentUrl] = useState<string>('');
-    const [config, setConfig] = useState(getServerConfig());
+    const [config, setConfig] = useState<ServerConfig | null>(null);
     const [copied, setCopied] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchConfig = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await fetch('/api/stats');
+            if (!response.ok) {
+                throw new Error('Failed to fetch server config');
+            }
+            const data = await response.json();
+            const serverConfig = data.serverConfig;
+            setConfig(serverConfig);
+
+            // Set current URL based on auto-detect setting
+            if (serverConfig.isAutoDetect && typeof window !== 'undefined') {
+                setCurrentUrl(`http://${window.location.host}/api/firmware/latest.bin`);
+            } else {
+                setCurrentUrl(serverConfig.otaUrl);
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+            console.error('Failed to fetch server config:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const serverConfig = getServerConfig();
-        setConfig(serverConfig);
-
-        if (serverConfig.isAutoDetect && typeof window !== 'undefined') {
-            setCurrentUrl(`http://${window.location.host}/api/firmware/latest.bin`);
-        } else {
-            setCurrentUrl(getFirmwareUrl());
-        }
+        fetchConfig();
     }, []);
 
     const copyToClipboard = async () => {
@@ -45,6 +75,46 @@ export default function ServerConfig() {
             console.error('Failed to copy URL:', err);
         }
     };
+
+    if (loading) {
+        return (
+            <Card elevation={2}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+                        <CircularProgress />
+                    </Box>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    if (error) {
+        return (
+            <Card elevation={2}>
+                <CardContent>
+                    <Alert
+                        severity="error"
+                        action={
+                            <Button
+                                color="inherit"
+                                size="small"
+                                onClick={fetchConfig}
+                                startIcon={<Refresh />}
+                            >
+                                Retry
+                            </Button>
+                        }
+                    >
+                        {error}
+                    </Alert>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    if (!config) {
+        return null;
+    }
 
     return (
         <Card elevation={2}>
@@ -60,6 +130,15 @@ export default function ServerConfig() {
                     </Typography>
                 }
                 subheader="Network settings"
+                action={
+                    <Button
+                        size="small"
+                        onClick={fetchConfig}
+                        startIcon={<Refresh />}
+                    >
+                        Refresh
+                    </Button>
+                }
             />
             <CardContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
