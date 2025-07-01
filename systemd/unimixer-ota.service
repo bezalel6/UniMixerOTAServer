@@ -1,0 +1,38 @@
+[Unit]
+Description=UniMixer OTA Firmware Server
+Documentation=https://github.com/your-repo/unimixer-ota
+Requires=docker.service
+After=docker.service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=forking
+RemainAfterExit=yes
+
+# Change this to your actual deployment directory
+WorkingDirectory=/opt/unimixer-ota
+
+# Start command
+ExecStart=/usr/bin/docker-compose up -d
+
+# Stop command
+ExecStop=/usr/bin/docker-compose down
+
+# Reload command
+ExecReload=/usr/bin/docker-compose restart
+
+# Restart policy
+Restart=always
+RestartSec=10
+TimeoutStartSec=0
+
+# Security settings
+User=unimixer
+Group=docker
+
+# Environment
+Environment=COMPOSE_PROJECT_NAME=unimixer-ota
+
+[Install]
+WantedBy=multi-user.target 
