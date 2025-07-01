@@ -1,0 +1,5 @@
+# This file ensures the firmware directory is preserved in git
+# while ignoring the actual firmware files (.bin, .hex, .elf)
+#
+# This directory is used by the OTA server to store uploaded firmware files.
+# The latest uploaded firmware is always available at /api/firmware/latest.bin 
