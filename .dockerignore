@@ -76,7 +76,6 @@ dist
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -111,6 +110,6 @@ Dockerfile*
 docker-compose*
 .dockerignore
 
-# Firmware data (handled by volumes)
+# Firmware data (handled by volumes) - but keep public directory structure
 public/firmware/*
 data/ 
